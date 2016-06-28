@@ -1,0 +1,14 @@
+{
+  "name": "WikiSocketCollection",
+  "version": "0.1.7",
+  "description": "A Wikipedia push socket for collating trending topics",
+  "dependencies": {
+    "level": "^1.4.0",
+    "socket.io-client": "^0.9.16"
+  },
+  "engines": {
+    "node": "0.12.2"
+  },
+  "keywords": [],
+  "license": "MIT"
+}
