@@ -175,6 +175,7 @@ function WikiSocketCollection( options ) {
 	// Connect to the websocket and start tracking.
 	io.connect( 'stream.wikimedia.org/rc' )
 		.on( 'connect', function () {
+			console.log('connected');
 			socket.emit( 'subscribe', project );
 		})
 		.on( 'change', function ( data ) {
