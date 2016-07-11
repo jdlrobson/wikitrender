@@ -11,7 +11,7 @@ var WikiPage = require( './WikiPage.js' );
  * @param {Integer} options.maxLifespan a page can stay in the collection in minutes (defaults to 1 day)
  * @param {Integer} options.maxInactivity a page can stay in the collection in minutes without being updated (defaults to 60)
  * @param {Integer} options.minSpeed the minimum of edits per minute a page must achieve to stay in the collection
- * @param {Integer} options.minPurgeTime the minimum time a page can stay in the collection in minutes before being subject to purge (defaults to 5).
+ * @param {Integer} options.minPurgeTime the minimum time a page can stay in the collection without being updated in minutes before being subject to purge (defaults to 5).
  */
 function WikiSocketCollection( options ) {
 	options = options || {};
@@ -204,13 +204,14 @@ function WikiSocketCollection( options ) {
 				wp = titles[i];
 				speed = wp.editsPerMinute();
 				age = wp.age();
+				lastUp = wp.lastUpdated();
 				// Only purge things that have been around for at least the minimum purge time
-				if ( age > minPurgeTime ) {
+				if ( lastUp > minPurgeTime ) {
 					if ( !wp.safe ) {
 						if ( speed < minSpeed ) {
 							drop( i );
 						// Drop any oldies
-						} else if ( age > maxLifespan || wp.lastUpdated() < maxInactivity ) {
+						} else if ( age > maxLifespan || lastUp < maxInactivity ) {
 							drop( i );
 						}
 					} else if ( age > maxLifespan ){
