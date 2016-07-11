@@ -120,7 +120,11 @@ function WikiSocketCollection( options ) {
 				page.notabilityFlags++;
 			}
 
-			if ( comment.indexOf( 'proposing article for deletion' ) > -1 ) {
+			if (
+				comment.indexOf( 'speedy deletion' ) > -1 ||
+				comment.indexOf( 'Nominated page for deletion' ) > -1 ||
+				comment.indexOf( 'proposing article for deletion' ) > -1
+			) {
 				page.volatileFlags++;
 			}
 		}
