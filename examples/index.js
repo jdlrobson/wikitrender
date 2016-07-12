@@ -1,8 +1,9 @@
-var WikiSocketCollection = require( './../WikiSocketCollection.js' );
+var WikiSocketCollection = require( './../index.js' );
 //var Trender = require( 'Trender.js' );
 
 var collection = new WikiSocketCollection( {
 	id: 'mysocket',
+  project: 'en.wikipedia.org',
 	maxAge: 60,
 	// Only keep things which are getting more than 5 edits per minute
 	minSpeed: 5
