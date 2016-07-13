@@ -296,11 +296,12 @@ function WikiSocketCollection( options ) {
 					collection.protectPage( data.title, data.wiki );
 				} else if ( action === 'delete' ) {
 					if ( !params.length ) {
-						params = data["log_action_comment"].match( /&quot;\[?\[?(.*)\]?\]?&quot;/ );
+						params = data["log_action_comment"].match( /&quot;\[\[(.*)\]\]&quot;|&quot;(.*)&quot;/ );
 						console.log( params, data["log_action"], data["log_action_comment"] )
-						if ( params && params[1] ) {
-							console.log( 'attempt delete', params[1]);
-							collection.drop(params[1], data.wiki);
+						params = params ? params[1] || params[2] : false;
+						if ( params ) {
+							console.log( 'attempt delete', params);
+							collection.drop(params, data.wiki);
 						}
 					}
 
@@ -362,11 +363,11 @@ function WikiSocketCollection( options ) {
 WikiSocketCollection.prototype = {
 	/**
 	 * Mark a page as safe until the maximum age has been surpassed.
-	 * @param {String} title of Page
+	 * @param {String} id of Page
 	 * @param {Boolean} unsafe when flag given the title is marked as unsafe.
 	 */
-	markSafe: function ( title, unsafe ) {
-		this.titles[title].safe = unsafe ? false : true;
+	markSafe: function ( id, unsafe ) {
+		this.titles[id].safe = unsafe ? false : true;
 	},
 	/**
 	 * Mark a page as being protected.
