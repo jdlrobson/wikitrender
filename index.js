@@ -132,6 +132,40 @@ function WikiSocketCollection( options ) {
 		emitter.on.apply( emitter, arguments );
 	};
 
+	/**
+	 * @param {String} oldTitle of page to update
+	 * @param {String} newTitle of page to update
+	 */
+	function renamePage( title, wiki, newTitle ) {
+		var page = collection.getPage( title, data.wiki );
+		var newPage = collection.getPage( newTitle, data.wiki );
+
+		// remove old one
+		collection.drop( page.id );
+		// update old page with new id
+		page.id = newPage.id;
+		page.updated = new Date();
+		// update the object with the new id
+		titles[ page.id ] = page;
+	}
+
+	/**
+	 * @param {String} title of page to update
+	 * @param {String} wiki of page to update
+	 * @param {Object} data on page to merge
+	 */
+	function updatePage( title, wiki, data ) {
+		var page = collection.getPage( data.title, data.wiki );
+		for ( key in data ) {
+			if ( data.hasOwnProperty( key ) ) {
+				page[key] = data;
+			}
+		}
+		// update it
+		page.updated = new Date();
+		// update the object;
+		titles[ page.id ] = page;
+	}
 
 	/**
 	 * Update the collection with new information from the RC stream
@@ -262,8 +296,19 @@ function WikiSocketCollection( options ) {
 			socket.emit( 'subscribe', project );
 		})
 		.on( 'change', function ( data ) {
+			var params, action;
 			// Ignore non-main namespace and anything abuse filter or tag related
-			if ( data.namespace !== 0 || data["log_type"] ||
+			if ( data["log_type"] ) {
+				params = data["log_params"];
+				action = data["log_action"];
+
+				if ( action === 'move' ) {
+					renamePage( data.title, data.wiki, params.target );
+				} else if ( action === 'protect' ) {
+					// Mark the page as protected
+					updatePage( data.title, data.wiki, { isProtected: true } );
+				}
+			} else if ( data.namespace !== 0 || data["log_type"] ||
 				isBotEdit( data ) || isFixup( data.comment ) ) {
 				return;
 			} else {
@@ -281,7 +326,7 @@ function WikiSocketCollection( options ) {
 			live = 0, purged = 0,
 			now = new Date();
 
-		function drop( id) {
+		function drop(id) {
 			purged++;
 			delete titles[id];
 		}
@@ -327,6 +372,13 @@ WikiSocketCollection.prototype = {
 	 */
 	markSafe: function ( title, unsafe ) {
 		this.titles[title].safe = unsafe ? false : true;
+	},
+	/**
+	 * Mark a page as safe until the maximum age has been surpassed.
+	 * @param {String} id of page to drop.
+	 */
+	drop: function ( id ) {
+		delete this.titles[id];
 	},
 	/**
 	 * @param {String} title of Page
