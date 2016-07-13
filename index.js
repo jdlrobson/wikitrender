@@ -204,6 +204,8 @@ function WikiSocketCollection( options ) {
 			}
 
 			if (
+				comment.indexOf( 'persistent vandalism' ) > -1 ||
+				comment.indexOf( 'possible vandalism' ) > -1 ||
 				comment.indexOf( 'speedy deletion' ) > -1 ||
 				comment.indexOf( 'Nominated page for deletion' ) > -1 ||
 				comment.indexOf( 'proposing article for deletion' ) > -1
