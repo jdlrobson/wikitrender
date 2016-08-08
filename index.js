@@ -4,7 +4,8 @@ var level = require( 'level' );
 var rcCache = level( './db_collection' );
 
 function WikiPage( title, props ) {
-	var now = new Date();
+	var key,
+		now = new Date();
 
 	props = props || {
 		title: title,
@@ -44,7 +45,8 @@ WikiPage.prototype = {
 	 * and current edit activity is to a single author.
 	 */
 	getBias: function () {
-		var mostProfilicEditCount = 0;
+		var user,
+			mostProfilicEditCount = 0;
 
 		// Calculate bias score
 		for ( user in this.distribution ) {
@@ -97,6 +99,7 @@ WikiPage.prototype = {
  * @param {Integer} options.minPurgeTime the minimum time a page can stay in the collection without being updated in minutes before being subject to purge (defaults to 5).
  */
 function WikiSocketCollection( options ) {
+	var i, data, project;
 	options = options || {};
 
 	const maxLifespan = options.maxLifespan || 60 * 24;
@@ -106,8 +109,8 @@ function WikiSocketCollection( options ) {
 	const emitter = new EventEmitter();
 	var titles = this.titles = {};
 	var socket = io.connect('stream.wikimedia.org/rc');
-	var id = options.id || Math.random();
 	var collection = this;
+	options.id = options.id || Math.random();
 
 	if ( options.id ) {
 		rcCache.get( options.id, function ( err, value ) {
@@ -160,13 +163,13 @@ function WikiSocketCollection( options ) {
 		 * @return {Boolean} whether the comment indicates the edit is a revert or a tag.
 		 * @private
 		 */
-		function isRevert() {
-			var comment = data.comment.toLowerCase();
+		function isRevert( comment ) {
+			comment = comment.toLowerCase();
 			return comment.indexOf( 'tag:' ) > -1 ||
-				comment.indexOf( 'undid' ) > -1 ||
-				comment.indexOf( 'revert' ) > -1 ||
-				comment.indexOf( 'reverting' ) > -1 ||
-				comment.indexOf( 'wp:' ) > -1 ||
+				comment.indexOf( 'undid' ) > -1 || //2
+				comment.indexOf( 'revert' ) > -1 || // 4
+				comment.indexOf( 'reverting' ) > -1 || // 1
+				comment.indexOf( 'wp:' ) > -1 || // 1
 				comment.indexOf( 'reverted' ) > -1;
 		}
 
@@ -237,7 +240,7 @@ function WikiSocketCollection( options ) {
 			page.isNew = true;
 		}
 		// update edit count/revert count
-		if ( isRevert() ) {
+		if ( isRevert( data.comment ) ) {
 			// don't count edits but note the revert.
 			page.reverts++;
 		} else {
@@ -286,9 +289,9 @@ function WikiSocketCollection( options ) {
 			if ( data.namespace !== 0 ||
 				isBotEdit( data ) || isFixup( data.comment ) ) {
 				return;
-			} else if ( data["log_type"] ) {
-				params = data["log_params"];
-				action = data["log_action"];
+			} else if ( data.log_type ) {
+				params = data.log_params;
+				action = data.log_action;
 
 				if ( action === 'move' ) {
 					renamePage( data.title, data.wiki, params.target );
@@ -296,16 +299,13 @@ function WikiSocketCollection( options ) {
 					collection.protectPage( data.title, data.wiki );
 				} else if ( action === 'delete' ) {
 					if ( !params.length ) {
-						params = data["log_action_comment"].match( /&quot;\[\[(.*)\]\]&quot;|&quot;(.*)&quot;/ );
-						console.log( params, data["log_action"], data["log_action_comment"] )
+						params = data.log_action_comment.match( /&quot;\[\[(.*)\]\]&quot;|&quot;(.*)&quot;/ );
 						params = params ? params[1] || params[2] : false;
 						if ( params ) {
 							console.log( 'attempt delete', params);
 							collection.drop(params, data.wiki);
 						}
 					}
-
-					console.log( data["log_action"], data["log_params"], data["log_action_comment"])
 				}
 			} else {
 				updateFromRCStream( data );
@@ -318,9 +318,8 @@ function WikiSocketCollection( options ) {
 	 * @private
 	 */
 	function cleaner() {
-		var i, wp, speed, age,
-			live = 0, purged = 0,
-			now = new Date();
+		var i, wp, speed, age, lastUp,
+			live = 0, purged = 0;
 
 		function drop( id ) {
 			purged++;
@@ -346,8 +345,6 @@ function WikiSocketCollection( options ) {
 						drop( i );
 					}
 				}
-			} else {
-				console.log(i,wp.editsPerMinute() < minSpeed, wp.age() > maxAge)
 			}
 		}
 		console.log('liivveee', live, 'purged', purged );
@@ -410,7 +407,7 @@ WikiSocketCollection.prototype = {
 	/**
 	 * @return {WikiPage[]} of pages in collection
 	 */
-	getPages: function ( minSpeed ) {
+	getPages: function () {
 		return Object.keys( this.titles ).map((t) => this.titles[t]);
 	}
 };

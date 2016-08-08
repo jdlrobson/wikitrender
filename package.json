@@ -6,9 +6,16 @@
     "level": "^1.4.0",
     "socket.io-client": "^0.9.16"
   },
+  "scripts": {
+    "test": "grunt test"
+  },
   "engines": {
     "node": "0.12.2"
   },
   "keywords": [],
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "grunt": "^1.0.1",
+    "grunt-contrib-jshint": "^1.0.0"
+  }
 }
