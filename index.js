@@ -282,7 +282,7 @@ function WikiSocketCollection( options ) {
 	socket
 		.on( 'connect', function () {
 			console.log('connected');
-			emitter.emit( 'subscribe', project );
+			socket.emit( 'subscribe', project );
 		})
 		.on( 'change', function ( data ) {
 			var params, action;
