@@ -108,9 +108,7 @@ function WikiSocketCollection( options ) {
 	const minPurgeTime = options.minPurgeTime || 5;
 	const emitter = new EventEmitter();
 	var titles = this.titles = {};
-	var socket = io.connect('stream.wikimedia.org/rc');
 	var collection = this;
-	options.id = options.id || Math.random();
 
 	if ( options.id ) {
 		rcCache.get( options.id, function ( err, value ) {
@@ -278,11 +276,13 @@ function WikiSocketCollection( options ) {
 	function isFixup( comment ) {
 		return comment.indexOf( 'Fixed error' ) > -1;
 	}
+
 	// Connect to the websocket and start tracking.
-	io.connect( 'stream.wikimedia.org/rc' )
+	var socket = options._socket || io.connect('stream.wikimedia.org/rc');
+	socket
 		.on( 'connect', function () {
 			console.log('connected');
-			socket.emit( 'subscribe', project );
+			emitter.emit( 'subscribe', project );
 		})
 		.on( 'change', function ( data ) {
 			var params, action;
