@@ -33,4 +33,16 @@ describe('WikiSocketCollection', function() {
 
     assert.equal( collection.getPages().length, 0 );
   });
+
+  it('should remove the old page during a rename', function() {
+
+    // edit
+    mockSocket.emit( 'change', edit );
+    // rename
+    mockSocket.emit( 'change', { namespace: 0, comment: 'Because', wiki: 'enwiki',
+      title: 'Foo',
+      log_type: 'log', log_action: 'move', log_params: { target: 'FoO' } } );
+
+    assert.equal( collection.getPages().length, 1 );
+  });
 });
