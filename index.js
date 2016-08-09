@@ -142,6 +142,7 @@ function WikiSocketCollection( options ) {
 	function renamePage( title, wiki, newTitle ) {
 		var page = collection.getPage( title, wiki );
 		var newPage = collection.getPage( newTitle, wiki );
+		console.log( 'rename', title, ' to ', newTitle );
 
 		// remove old one
 		collection.drop( page.title, wiki );
@@ -217,7 +218,7 @@ function WikiSocketCollection( options ) {
 
 			if ( comment.indexOf( 'eventtag' ) > -1 ||
 				comment.indexOf( 'current event' ) > -1 ||
-				comment.indexOf( '→‎Death' ) > -1 ||
+				comment.indexOf( '→Death' ) > -1 ||
 				comment.indexOf( 'ongoing event' ) > -1
 			) {
 				page.notabilityFlags++;
