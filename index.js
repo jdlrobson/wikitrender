@@ -383,7 +383,8 @@ WikiSocketCollection.prototype = {
 	 * @param {String} id of page to drop.
 	 */
 	drop: function ( title, wiki ) {
-		delete this.titles[wiki + '/' + title];
+		var id = wiki === 'enwiki' ? title : wiki + '/' + title;
+		delete this.titles[id];
 	},
 	/**
 	 * @param {String} title of Page

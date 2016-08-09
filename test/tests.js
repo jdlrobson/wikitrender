@@ -3,6 +3,8 @@ var WikiSocketCollection = require( './../index.js' );
 
 const EventEmitter = require( 'events' );
 
+const edit = { title: 'Foo', comment: 'yo', namespace: 0, user: 'Jon', length: { new: 2, old: 1 }, wiki: 'enwiki' };
+
 describe('WikiSocketCollection', function() {
   var mockSocket = new EventEmitter();
   var collection = new WikiSocketCollection( {
@@ -12,7 +14,7 @@ describe('WikiSocketCollection', function() {
   it('should should keep track of an edit', function() {
 
     // edit
-    mockSocket.emit( 'change', { title: 'Foo', comment: 'yo', namespace: 0, user: 'Jon', length: { new: 2, old: 1 } } );
+    mockSocket.emit( 'change', edit );
 
     var pages = collection.getPages();
     assert.equal( pages.length, 1 );
@@ -20,5 +22,15 @@ describe('WikiSocketCollection', function() {
     var page = pages[0];
     assert.equal( page.title, 'Foo' );
     assert.equal( page.bytesChanged, 1 );
+  });
+
+  it('should be possible to drop a page.', function() {
+
+    // edit
+    mockSocket.emit( 'change', edit );
+    // drop
+    collection.drop( 'Foo', 'enwiki' );
+
+    assert.equal( collection.getPages().length, 0 );
   });
 });
