@@ -227,6 +227,7 @@ function WikiSocketCollection( options ) {
 				comment.indexOf( 'nominated for deletion' ) > -1 ||
 				comment.indexOf( 'nominated page for deletion' ) > -1 ||
 				comment.indexOf( 'restore afd template' ) > -1 ||
+				comment.indexOf( '{{pp-vandalism' ) > -1 ||
 				comment.indexOf( 'proposing article for deletion' ) > -1
 			) {
 				page.volatileFlags++;
