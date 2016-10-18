@@ -4,6 +4,7 @@ var WikiSocketCollection = require( './../index.js' );
 const EventEmitter = require( 'events' );
 
 const edit = { title: 'Foo', comment: 'yo', namespace: 0, user: 'Jon', length: { new: 2, old: 1 }, wiki: 'enwiki' };
+const afd = { title: 'Foo', comment: 'Nominated page for deletion', namespace: 0, user: 'Vandal', length: { new: 2, old: 1 }, wiki: 'enwiki' };
 
 describe('WikiSocketCollection', function() {
   var mockSocket = new EventEmitter();
@@ -44,5 +45,18 @@ describe('WikiSocketCollection', function() {
       log_type: 'log', log_action: 'move', log_params: { target: 'FoO' } } );
 
     assert.equal( collection.getPages().length, 1 );
+  });
+
+  it('should scan edit summaries for clues to volatileness', function() {
+    collection = new WikiSocketCollection( {
+      _socket: mockSocket
+    } );
+
+    // edit
+    mockSocket.emit( 'change', edit );
+    // rename
+    mockSocket.emit( 'change', afd );
+
+    assert.equal( collection.getPages()[0].volatileFlags, 1 );
   });
 });
