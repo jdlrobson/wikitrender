@@ -412,7 +412,8 @@ WikiSocketCollection.prototype = {
 	 */
 	getPages: function () {
 		return Object.keys( this.titles ).map((t) => this.titles[t]);
-	}
+	},
+	WikiPage: WikiPage
 };
 
 module.exports = WikiSocketCollection;
