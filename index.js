@@ -279,7 +279,7 @@ function WikiSocketCollection( options ) {
 	}
 
 	// Connect to the websocket and start tracking.
-	var socket = options._socket || io.connect('stream.wikimedia.org/rc');
+	var socket = options._socket || io.connect('https://stream.wikimedia.org/rc');
 	socket
 		.on( 'connect', function () {
 			console.log('connected');
