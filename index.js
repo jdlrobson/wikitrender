@@ -45,18 +45,26 @@ WikiPage.prototype = {
 	 * and current edit activity is to a single author.
 	 */
 	getBias: function () {
-		var user,
-			mostProfilicEditCount = 0;
+		var variance,
+			avg = 0,
+			dist = this.distribution,
+			values = [],
+			totalDeviationSquared = 0;
 
-		// Calculate bias score
-		for ( user in this.distribution ) {
-			if ( this.distribution.hasOwnProperty( user ) ) {
-				if ( this.distribution[user] > mostProfilicEditCount ) {
-					mostProfilicEditCount = this.distribution[user]
-				}
-			}
-		}
-		return mostProfilicEditCount / this.edits;
+		// calculate average
+		this.contributors.forEach( function ( user ) {
+			values.push( dist[user] );
+			avg += values[values.length - 1];
+		} );
+		avg = avg / values.length;
+		// calculate deviations
+		values.forEach( function ( val ) {
+			var deviation = ( val - avg );
+			totalDeviationSquared += ( deviation * deviation );
+		} );
+		// variance
+		variance = totalDeviationSquared / values.length;
+		return variance > this.edits ? 1 : variance / this.edits;
 	},
 	/**
 	 * Work out how long the page has been in the collection

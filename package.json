@@ -1,6 +1,6 @@
 {
   "name": "wikitrender",
-  "version": "0.2.3",
+  "version": "0.5.0",
   "description": "A Wikipedia push socket for collating trending topics",
   "dependencies": {
     "level": "^1.4.0",
