@@ -12,6 +12,12 @@ describe('WikiSocketCollection', function() {
     _socket: mockSocket
   } );
   
+  it( 'isIP', function() {
+    assert.ok( WikiSocketCollection.isIP( '2A02:27B0:4400:33F0:E0FF:19DF:B401:9559' ) );
+    assert.ok( !WikiSocketCollection.isIP( 'Jdlrobson' ) );
+    assert.ok( WikiSocketCollection.isIP( '192.168.0.1' ) );
+  } );
+
   it('should should keep track of an edit', function() {
 
     // edit

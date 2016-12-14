@@ -3,6 +3,15 @@ var io = require( 'socket.io-client' );
 var level = require( 'level' );
 var rcCache = level( './db_collection' );
 
+/**
+ * @return {Boolean} whether the username indicates an IP thus anon edit.
+ * @private
+ */
+function isIP( user ) {
+	var match = user.match( /[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+|[0-9A-F]+:[0-9A-F]+:[0-9A-F]+:[0-9A-F]+:[0-9A-F]+/ );
+	return match && match[0] ? true : false;
+}
+
 function WikiPage( title, props ) {
 	var key,
 		now = new Date();
@@ -178,16 +187,6 @@ function WikiSocketCollection( options ) {
 				comment.indexOf( 'reverting' ) > -1 || // 1
 				comment.indexOf( 'wp:' ) > -1 || // 1
 				comment.indexOf( 'reverted' ) > -1;
-		}
-
-		/**
-		 * @return {Boolean} whether the username indicates an IP thus anon edit.
-		 * @private
-		 */
-		function isIP() {
-			var user = data.user;
-			var match = user.match( /[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+|[0-9A-E]+:[0-9A-E]+:[0-9A-E]+:[0-9A-E]+:[0-9A-E]+/ );
-			return match && match[0];
 		}
 
 		/**
@@ -424,4 +423,5 @@ WikiSocketCollection.prototype = {
 	WikiPage: WikiPage
 };
 
+WikiSocketCollection.isIP = isIP;
 module.exports = WikiSocketCollection;
