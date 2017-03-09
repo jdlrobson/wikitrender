@@ -1,8 +1,8 @@
 const EventEmitter = require( 'events' );
-var io = require( 'socket.io-client' );
 var level = require( 'level' );
 var rcCache = level( './db_collection' );
 var scorer = require( 'wikipedia-edits-scorer' );
+var EventSource = require( 'eventsource' );
 
 /**
  * @return {Boolean} whether the username indicates an IP thus anon edit.
@@ -267,42 +267,50 @@ function WikiSocketCollection( options ) {
 		return comment.indexOf( 'Fixed error' ) > -1;
 	}
 
-	// Connect to the websocket and start tracking.
-	var socket = options._socket || io.connect('https://stream.wikimedia.org/rc');
-	socket
-		.on( 'connect', function () {
-			console.log('connected');
-			socket.emit( 'subscribe', project );
-		})
-		.on( 'change', function ( data ) {
-			var params, action;
-			// Ignore non-main namespace and anything abuse filter or tag related
-			if ( data.namespace !== 0 ||
-				isBotEdit( data ) || isFixup( data.comment ) ) {
-				return;
-			} else if ( data.log_type ) {
-				params = data.log_params;
-				action = data.log_action;
+	// Connect to the stream and start tracking.
+	var socket = new EventSource( 'https://stream.wikimedia.org/v2/stream/recentchange' );
 
-				if ( action === 'move' ) {
-					renamePage( data.title, data.wiki, params.target );
-				} else if ( action === 'protect' ) {
-					collection.protectPage( data.title, data.wiki );
-				} else if ( action === 'delete' ) {
-					if ( !params.length ) {
-						params = data.log_action_comment.match( /&quot;\[\[(.*)\]\]&quot;|&quot;(.*)&quot;/ );
-						params = params ? params[1] || params[2] : false;
-						if ( params ) {
-							console.log( 'attempt delete', params);
-							collection.drop(params, data.wiki);
-						}
+	socket.onerror = function( event ) {
+		console.error('--- Encountered error', event);
+	};
+
+	socket.onopen = function () {
+		console.log('connected');
+		socket.emit( 'subscribe', project );
+	};
+
+	socket.onmessage = function ( event ) {
+		var params, action,
+			data = JSON.parse( event.data );
+
+		// Ignore non-main namespace and anything abuse filter or tag related
+		if ( data.namespace !== 0 ||
+			( project !== '*' && data.server_name !== project ) ||
+			isBotEdit( data ) || isFixup( data.comment ) ) {
+			return;
+		} else if ( data.log_type ) {
+			params = data.log_params;
+			action = data.log_action;
+
+			if ( action === 'move' ) {
+				renamePage( data.title, data.wiki, params.target );
+			} else if ( action === 'protect' ) {
+				collection.protectPage( data.title, data.wiki );
+			} else if ( action === 'delete' ) {
+				if ( !params.length ) {
+					params = data.log_action_comment.match( /&quot;\[\[(.*)\]\]&quot;|&quot;(.*)&quot;/ );
+					params = params ? params[1] || params[2] : false;
+					if ( params ) {
+						console.log( 'attempt delete', params);
+						collection.drop(params, data.wiki);
 					}
 				}
-			} else {
-				updateFromRCStream( data );
-				emitter.emit( 'edit', collection.getPage( data.title, data.wiki ), collection );
 			}
-		} );
+		} else {
+			updateFromRCStream( data );
+			emitter.emit( 'edit', collection.getPage( data.title, data.wiki ), collection );
+		}
+	};
 
 	/**
 	 * Internal clean process. Ensures we don't store edits for longer than necessary.

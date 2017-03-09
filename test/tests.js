@@ -3,8 +3,17 @@ var WikiSocketCollection = require( './../index.js' );
 
 const EventEmitter = require( 'events' );
 
-const edit = { title: 'Foo', comment: 'yo', namespace: 0, user: 'Jon', length: { new: 2, old: 1 }, wiki: 'enwiki' };
-const afd = { title: 'Foo', comment: 'Nominated page for deletion', namespace: 0, user: 'Vandal', length: { new: 2, old: 1 }, wiki: 'enwiki' };
+const edit = { title: 'Foo', comment: 'yo',
+  namespace: 0, user: 'Jon',
+  //length: { new: 2, old: 1 },
+  wiki: 'enwiki',
+  server_name: 'en.wikipedia.org'
+};
+const afd = {
+  title: 'Foo', comment: 'Nominated page for deletion', namespace: 0, user: 'Vandal',
+  //length: { new: 2, old: 1 },
+	server_name: 'en.wikipedia.org',
+	wiki: 'enwiki' };
 
 describe('WikiSocketCollection', function() {
   var mockSocket = new EventEmitter();
