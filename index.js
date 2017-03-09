@@ -2,6 +2,7 @@ const EventEmitter = require( 'events' );
 var io = require( 'socket.io-client' );
 var level = require( 'level' );
 var rcCache = level( './db_collection' );
+var scorer = require( 'wikipedia-edits-scorer' );
 
 /**
  * @return {Boolean} whether the username indicates an IP thus anon edit.
@@ -54,26 +55,7 @@ WikiPage.prototype = {
 	 * and current edit activity is to a single author.
 	 */
 	getBias: function () {
-		var variance,
-			avg = 0,
-			dist = this.distribution,
-			values = [],
-			totalDeviationSquared = 0;
-
-		// calculate average
-		this.contributors.forEach( function ( user ) {
-			values.push( dist[user] );
-			avg += values[values.length - 1];
-		} );
-		avg = avg / values.length;
-		// calculate deviations
-		values.forEach( function ( val ) {
-			var deviation = ( val - avg );
-			totalDeviationSquared += ( deviation * deviation );
-		} );
-		// variance
-		variance = totalDeviationSquared / values.length;
-		return variance > this.edits ? 1 : variance / this.edits;
+		return scorer.getBias( this.contributors );
 	},
 	/**
 	 * Work out how long the page has been in the collection
