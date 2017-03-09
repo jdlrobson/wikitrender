@@ -1,16 +1,22 @@
 var assert = require( 'assert' );
 var WikiSocketCollection = require( './../index.js' );
 
-const EventEmitter = require( 'events' );
-
-const edit = { title: 'Foo', comment: 'yo', namespace: 0, user: 'Jon', length: { new: 2, old: 1 }, wiki: 'enwiki' };
-const afd = { title: 'Foo', comment: 'Nominated page for deletion', namespace: 0, user: 'Vandal', length: { new: 2, old: 1 }, wiki: 'enwiki' };
+const edit = JSON.stringify(
+  { title: 'Foo', comment: 'yo',
+  namespace: 0, user: 'Jon',
+  length: { new: 2, old: 1 },
+  wiki: 'enwiki',
+  server_name: 'en.wikipedia.org'
+});
+const afd = JSON.stringify({
+  title: 'Foo', comment: 'Nominated page for deletion', namespace: 0, user: 'Vandal',
+  length: { new: 2, old: 1 },
+	server_name: 'en.wikipedia.org',
+	wiki: 'enwiki' });
 
 describe('WikiSocketCollection', function() {
-  var mockSocket = new EventEmitter();
-  var collection = new WikiSocketCollection( {
-    _socket: mockSocket
-  } );
+  var collection = new WikiSocketCollection();
+  var mockSocket = collection._socket;
   
   it( 'isIP', function() {
     assert.ok( WikiSocketCollection.isIP( '2A02:27B0:4400:33F0:E0FF:19DF:B401:9559' ) );
@@ -21,7 +27,7 @@ describe('WikiSocketCollection', function() {
   it('should should keep track of an edit', function() {
 
     // edit
-    mockSocket.emit( 'change', edit );
+    mockSocket.onmessage( { data: edit } );
 
     var pages = collection.getPages();
     assert.equal( pages.length, 1 );
@@ -34,7 +40,7 @@ describe('WikiSocketCollection', function() {
   it('should be possible to drop a page.', function() {
 
     // edit
-    mockSocket.emit( 'change', edit );
+    mockSocket.onmessage( { data: edit } );
     // drop
     collection.drop( 'Foo', 'enwiki' );
 
@@ -44,24 +50,28 @@ describe('WikiSocketCollection', function() {
   it('should remove the old page during a rename', function() {
 
     // edit
-    mockSocket.emit( 'change', edit );
+    mockSocket.onmessage( { data: edit } );
     // rename
-    mockSocket.emit( 'change', { namespace: 0, comment: 'Because', wiki: 'enwiki',
-      title: 'Foo',
-      log_type: 'log', log_action: 'move', log_params: { target: 'FoO' } } );
+    mockSocket.onmessage( { data:
+      JSON.stringify({
+        namespace: 0, comment: 'Because', wiki: 'enwiki',
+        title: 'Foo',
+        log_type: 'log', log_action: 'move',
+        log_params: { target: 'FoO' }
+      })
+    } );
 
     assert.equal( collection.getPages().length, 1 );
   });
 
   it('should scan edit summaries for clues to volatileness', function() {
-    collection = new WikiSocketCollection( {
-      _socket: mockSocket
-    } );
+    collection = new WikiSocketCollection();
+    mockSocket = collection._socket;
 
     // edit
-    mockSocket.emit( 'change', edit );
+    mockSocket.onmessage( { data: edit } );
     // rename
-    mockSocket.emit( 'change', afd );
+    mockSocket.onmessage( { data: afd } );
 
     assert.equal( collection.getPages()[0].volatileFlags, 1 );
   });
