@@ -55,7 +55,7 @@ WikiPage.prototype = {
 	 * and current edit activity is to a single author.
 	 */
 	getBias: function () {
-		return scorer.getBias( this.contributors );
+		return scorer.getBias( this.distribution );
 	},
 	/**
 	 * Work out how long the page has been in the collection
