@@ -224,6 +224,9 @@ function WikiSocketCollection( options ) {
 		}
 
 		var page = collection.getPage( data.title, data.wiki );
+		var isBot = isBotEdit( data );
+		var bytesChanged = ( data.length.new - data.length.old );
+
 		// update new status
 		if ( data.type === 'new' ) {
 			page.isNew = true;
@@ -232,15 +235,21 @@ function WikiSocketCollection( options ) {
 		if ( isRevert( data.comment ) ) {
 			// don't count edits but note the revert.
 			page.reverts++;
+			// update bytes changed
+			page.bytesChanged += bytesChanged;
 		} else {
-			page.edits++;
+			if ( !isBot ) {
+				page.edits++;
+				// update bytes changed
+				page.bytesChanged += bytesChanged;
+			}
 		}
-		// update bytes changed
-		page.bytesChanged += ( data.length.new - data.length.old );
 		// update information based on content of comment
 		updateFromComment( page );
 		// update information based on last editor
-		updateFromEditor( page );
+		if ( !isBot && !isRevert ) {
+			updateFromEditor( page );
+		}
 		// update it
 		page.updated = new Date();
 		// update the object;
@@ -287,7 +296,7 @@ function WikiSocketCollection( options ) {
 		// Ignore non-main namespace and anything abuse filter or tag related
 		if ( data.namespace !== 0 ||
 			( project !== '*' && data.server_name !== project ) ||
-			isBotEdit( data ) || isFixup( data.comment ) ) {
+			 isFixup( data.comment ) ) {
 			return;
 		} else if ( data.log_type ) {
 			params = data.log_params;
