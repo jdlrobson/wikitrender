@@ -9,7 +9,7 @@ var collection = new WikiSocketCollection( {
 	minSpeed: 5
 } );
 
-collection.on( 'change', function ( page, collection ) {
+collection.on( 'edit', function ( page, collection ) {
 	console.log( '->', page.title, page.editsPerMinute() );
 } );
 
