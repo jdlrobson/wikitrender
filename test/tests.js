@@ -46,6 +46,8 @@ describe('WikiSocketCollection', function() {
     var page = pages[0];
     assert.equal( page.title, 'Foo' );
     assert.equal( page.bytesChanged, 1 );
+    assert.equal( page.contributors.length, 1, 'There is 1 contributor' );
+    assert.equal( page.distribution.Jon, 1, 'Jon is one of them' );
   });
 
   it('should be possible to drop a page.', function() {

@@ -225,6 +225,7 @@ function WikiSocketCollection( options ) {
 
 		var page = collection.getPage( data.title, data.wiki );
 		var isBot = isBotEdit( data );
+		var isRevertEdit = isRevert( data.comment );
 		var bytesChanged = ( data.length.new - data.length.old );
 
 		// update new status
@@ -232,7 +233,7 @@ function WikiSocketCollection( options ) {
 			page.isNew = true;
 		}
 		// update edit count/revert count
-		if ( isRevert( data.comment ) ) {
+		if ( isRevertEdit ) {
 			// don't count edits but note the revert.
 			page.reverts++;
 			// update bytes changed
@@ -247,7 +248,7 @@ function WikiSocketCollection( options ) {
 		// update information based on content of comment
 		updateFromComment( page );
 		// update information based on last editor
-		if ( !isBot && !isRevert ) {
+		if ( !isBot && !isRevertEdit ) {
 			updateFromEditor( page );
 		}
 		// update it
