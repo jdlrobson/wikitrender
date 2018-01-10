@@ -348,10 +348,11 @@ function WikiSocketCollection( options ) {
 						if ( speed < minSpeed ) {
 							drop( i );
 						// Drop any oldies
-						} else if ( age > maxLifespan || lastUp < maxInactivity ) {
+						} else if ( lastUp > maxInactivity ) {
 							drop( i );
 						}
-					} else if ( age > maxLifespan ){
+					}
+					if ( age > maxLifespan ) {
 						drop( i );
 					}
 				}
