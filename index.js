@@ -343,7 +343,7 @@ function WikiSocketCollection( options ) {
 				age = wp.age();
 				lastUp = wp.lastUpdated();
 				// Only purge things that have been around for at least the minimum purge time
-				if ( lastUp > minPurgeTime ) {
+				if ( age > minPurgeTime ) {
 					if ( !wp.safe ) {
 						if ( speed < minSpeed ) {
 							drop( i );
