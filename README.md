@@ -1,6 +1,6 @@
 # Wikitrender
 
-A wrapper for the (https://wikitech.wikimedia.org/wiki/EventStreams)Wikimedia EventStream for monitoring edit
+A wrapper for the [Wikimedia EventStream](https://wikitech.wikimedia.org/wiki/EventStreams) for monitoring edit
 activity on Wikimedia projects e.g. Wikipedia over an extended period of time.
 
 Sample code:
