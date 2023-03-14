@@ -96,6 +96,7 @@ WikiPage.prototype = {
  * @param {Integer} options.maxInactivity a page can stay in the collection in minutes without being updated (defaults to 60)
  * @param {Integer} options.minSpeed the minimum of edits per minute a page must achieve to stay in the collection
  * @param {Integer} options.minPurgeTime the minimum time a page can stay in the collection without being updated in minutes before being subject to purge (defaults to 5).
+ * @param {Boolean} options.clearCache whether to clear any existing cache when creating the collection.
  */
 function WikiSocketCollection( options ) {
 	var i, data, project;
@@ -123,6 +124,10 @@ function WikiSocketCollection( options ) {
 				titles[i] = new WikiPage( data.title, data );
 			}
 		} );
+	}
+	if ( options.clearCache ) {
+		console.log( 'Cache was cleared' );
+		rcCache.clear();
 	}
 
 	project = options.project || 'en.wikipedia.org';

@@ -3,14 +3,15 @@ var WikiSocketCollection = require( './../index.js' );
 
 var collection = new WikiSocketCollection( {
 	id: 'mysocket',
-  project: 'en.wikipedia.org',
+	project: 'en.wikipedia.org',
 	maxAge: 60,
 	// Only keep things which are getting more than 5 edits per minute
-	minSpeed: 5
+	minSpeed: 5,
+	clearCache: true
 } );
 
 collection.on( 'edit', function ( page, collection ) {
-	console.log( '->', page.title, page.editsPerMinute() );
+	console.log( `${page.title} was edited, it is currently being edited at ${page.editsPerMinute()} edits per minute` );
 } );
 
 setInterval( function () {
