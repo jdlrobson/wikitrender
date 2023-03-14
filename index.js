@@ -97,10 +97,15 @@ WikiPage.prototype = {
  * @param {Integer} options.minSpeed the minimum of edits per minute a page must achieve to stay in the collection
  * @param {Integer} options.minPurgeTime the minimum time a page can stay in the collection without being updated in minutes before being subject to purge (defaults to 5).
  * @param {Boolean} options.clearCache whether to clear any existing cache when creating the collection.
+ * @param {Boolean} options.debug whether to show debugging information
  */
 function WikiSocketCollection( options ) {
 	var i, data, project;
 	options = options || {};
+	const debugMsg = options.debug? ( msg ) => {
+		console.log( `[debug] ${msg}` )
+	} : () => {};
+	this.debugMsg = debugMsg;
 
 	const maxLifespan = options.maxLifespan || 60 * 24;
 	const maxInactivity = options.maxInactivity || 60;
@@ -115,19 +120,24 @@ function WikiSocketCollection( options ) {
 			var rawTitles = {};
 			if ( !err ) {
 				rawTitles = JSON.parse( value );
-				console.log('loaded!');
+				debugMsg('loaded cached items!');
 			} else {
-				console.log('errr');
+				debugMsg('error occurred loading from cache');
 			}
 			for ( i in rawTitles ) {
 				data = rawTitles[i];
 				titles[i] = new WikiPage( data.title, data );
 			}
+			if ( options.clearCache ) {
+				rcCache.clear(null, ( err ) => {
+
+					debugMsg(
+						err ? `Error occurred clearing cache (${err})` :
+						'Cache was cleared'
+					);
+				});
+			}
 		} );
-	}
-	if ( options.clearCache ) {
-		console.log( 'Cache was cleared' );
-		rcCache.clear();
 	}
 
 	project = options.project || 'en.wikipedia.org';
@@ -144,7 +154,7 @@ function WikiSocketCollection( options ) {
 	function renamePage( title, wiki, newTitle ) {
 		var page = collection.getPage( title, wiki );
 		var newPage = collection.getPage( newTitle, wiki );
-		console.log( 'rename', title, ' to ', newTitle );
+		debugMsg( `rename ${title} to ${newTitle}` );
 
 		// remove old one
 		collection.drop( page.title, wiki );
@@ -287,11 +297,11 @@ function WikiSocketCollection( options ) {
 	this._socket = socket;
 
 	socket.onerror = function( event ) {
-		console.error('--- Encountered error', event);
+		debugMsg(`--- Web socker encountered error: ${event}`);
 	};
 
 	socket.onopen = function () {
-		console.log('connected');
+		debugMsg('web socket is connected');
 		socket.emit( 'subscribe', project );
 	};
 
@@ -317,7 +327,7 @@ function WikiSocketCollection( options ) {
 					params = data.log_action_comment.match( /&quot;\[\[(.*)\]\]&quot;|&quot;(.*)&quot;/ );
 					params = params ? params[1] || params[2] : false;
 					if ( params ) {
-						console.log( 'attempt delete', params);
+						debugMsg( `attempt delete ${params}` );
 						collection.drop(params, data.wiki);
 					}
 				}
@@ -363,7 +373,7 @@ function WikiSocketCollection( options ) {
 				}
 			}
 		}
-		console.log('liivveee', live, 'purged', purged );
+		debugMsg(`There are ${live} articles being considered for trending. Purged ${purged} stale entries` );
 		// save result to cache
 		if ( options.id ) {
 			rcCache.put( options.id, JSON.stringify( titles ) );
