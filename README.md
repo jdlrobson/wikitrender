@@ -5,6 +5,7 @@ activity on Wikimedia projects e.g. Wikipedia over an extended period of time.
 
 Sample code:
 
+```
 	var WikiSocketCollection = require( 'wikitrender' );
 
 	var collection = new WikiSocketCollection( {
@@ -24,3 +25,14 @@ Sample code:
 			collection.markSafe( page.id );
 		}
 	} );
+```
+
+# Setup
+
+Using Node v16.16.0 is recommended.
+
+```
+npm install
+# Run locally
+node examples/index.js
+```
