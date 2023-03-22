@@ -292,20 +292,23 @@ function WikiSocketCollection( options ) {
 		return comment.indexOf( 'Fixed error' ) > -1;
 	}
 
-	// Connect to the stream and start tracking.
-	var socket = new EventSource( 'https://stream.wikimedia.org/v2/stream/recentchange' );
-	this._socket = socket;
+	const newSocket = ( project, onmessage, onerror ) => {
+		const socket = new EventSource( 'https://stream.wikimedia.org/v2/stream/recentchange' );
+		socket.onerror = onerror;
+		socket.onopen = function () {
+			debugMsg('web socket is connected');
+			socket.emit( 'subscribe', project );
+		};
+		socket.onmessage = onmessage;
+		this.lastEditTimestamp = new Date();
+		return socket;
+	}
 
-	socket.onerror = function( event ) {
+	const onerror = function( event ) {
 		debugMsg(`--- Web socker encountered error: ${event}`);
 	};
 
-	socket.onopen = function () {
-		debugMsg('web socket is connected');
-		socket.emit( 'subscribe', project );
-	};
-
-	socket.onmessage = function ( event ) {
+	const onmessage = ( event ) => {
 		var params, action,
 			data = JSON.parse( event.data );
 
@@ -334,9 +337,23 @@ function WikiSocketCollection( options ) {
 			}
 		} else {
 			updateFromRCStream( data );
+			this.lastEditTimestamp = new Date();
 			emitter.emit( 'edit', collection.getPage( data.title, data.wiki ), collection );
 		}
 	};
+
+	// Connect to the stream and start tracking.
+	this._socket = newSocket( project, onmessage, onerror );
+
+	// If no edits reboot server.
+	const TIMEOUT_AFTER = 1000 * 60 * 5; // 5 minutes
+	setInterval( () => {
+		const timePassedMs = new Date() - this.lastEditTimestamp;
+		if ( timePassedMs > TIMEOUT_AFTER ) {
+			debugMsg( 'Socket timed out. Updating socket.')
+			this._socket = newSocket( project, onmessage, onerror );
+		}
+	}, TIMEOUT_AFTER / 2 );
 
 	/**
 	 * Internal clean process. Ensures we don't store edits for longer than necessary.
